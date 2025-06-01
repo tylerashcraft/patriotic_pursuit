@@ -13,4 +13,9 @@ class Tile {
     adjacentTiles.add(tile);
     tile.adjacentTiles.add(this);
   }
+
+  @override
+  String toString() {
+    return '$offset';
+  }
 }

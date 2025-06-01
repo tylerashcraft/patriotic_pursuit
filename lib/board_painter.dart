@@ -1,37 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:patriotic_pursuit/player.dart';
 import 'package:patriotic_pursuit/tile.dart';
+import 'package:patriotic_pursuit/offset_util.dart';
 
 class BoardPainter extends CustomPainter {
-  final List<Tile> _tiles;
   final List<Player> _players;
-  final Paint _legalMovePaint = Paint()..color = Colors.blueAccent;
+  final Paint _legalMovePaint = Paint()..color = Colors.black;
+  final Set<Tile> _tiles;
 
   BoardPainter(this._tiles, this._players);
 
   @override
   void paint(Canvas canvas, Size size) {
-    Offset middle = Offset(size.width / 2, size.height / 2);
+    for (Player player in _players) {
+      canvas.drawCircle(OffsetUtil.getScaledOffset(player.currentTile.offset, size), 20, Paint()..color = Colors.black);
+      canvas.drawCircle(OffsetUtil.getScaledOffset(player.currentTile.offset, size), 18, Paint()..color = player.color);
+    }
 
     for (Tile tile in _tiles) {
-      canvas.drawCircle(_getScaledOffset(tile.offset, size) + middle, 5, _legalMovePaint);
-
-      for (Tile adjacentTile in tile.adjacentTiles) {
-        canvas.drawLine(_getScaledOffset(tile.offset, size) + middle, _getScaledOffset(adjacentTile.offset, size) + middle, _legalMovePaint);
-      }
+      canvas.drawCircle(OffsetUtil.getScaledOffset(tile.offset, size), 9, _legalMovePaint);
     }
-
-    for (Player player in _players) {
-      canvas.drawCircle(_getScaledOffset(player.currentTile.offset, size) + middle, 10, Paint()..color = player.color);
-    }
-  }
-
-  Offset _getScaledOffset(Offset offset, Size size) {
-    return Offset(offset.dx * size.width / 1728, offset.dy * size.height / 936);
   }
 
   @override
   bool shouldRepaint(covariant BoardPainter oldDelegate) {
-    return true;
+    return oldDelegate._players != _players || oldDelegate._tiles != _tiles;
   }
 }

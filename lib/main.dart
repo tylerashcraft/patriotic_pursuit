@@ -1,8 +1,10 @@
+import 'dart:collection';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:patriotic_pursuit/board_painter.dart';
+import 'package:patriotic_pursuit/offset_util.dart';
 import 'package:patriotic_pursuit/player.dart';
 import 'package:patriotic_pursuit/questions.dart';
 import 'package:patriotic_pursuit/tile.dart';
@@ -83,14 +85,21 @@ class BoardScreen extends StatefulWidget {
 
 class _BoardScreenState extends State<BoardScreen> {
   final List<Player> _players = List.empty(growable: true);
+  int _activePlayerIndex = 0;
+  int _moves = 0;
+  Set<Tile> _legalMoves = HashSet();
+  bool _allowPieceMovement = false;
 
   Future<int?> _getNumberOfPlayers() async {
     return showDialog<int>(
       context: context,
       builder: (BuildContext buildContext) {
+        TextEditingController controller = TextEditingController();
+
         return AlertDialog(
           title: const Text('Enter the number of players'),
           content: TextField(
+            controller: controller,
             keyboardType: TextInputType.number,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly
@@ -98,7 +107,7 @@ class _BoardScreenState extends State<BoardScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: Navigator.of(context).pop,
+              onPressed: () => Navigator.pop(context, int.parse(controller.text)),
               child: const Text('Submit')
             )
           ],
@@ -111,6 +120,51 @@ class _BoardScreenState extends State<BoardScreen> {
     for (int i = 0; i < numberOfPlayers; i++) {
       _players.add(Player(widget.middlePiece));
     }
+    setState(() {});
+  }
+
+  void _getLegalMoves() {
+    if (_moves != 0) {
+      Player activePlayer = _players[_activePlayerIndex];
+      _depthFirstSearch(_legalMoves, activePlayer.currentTile, _moves);
+      _allowPieceMovement = true;
+      setState(() {});
+    }
+  }
+
+  void _depthFirstSearch(Set<Tile> tiles, Tile tile, int depth) {
+    if (depth != 0) {
+      for (Tile adjacentTile in tile.adjacentTiles) {
+        if (depth == 1) {
+          tiles.add(adjacentTile);
+        }
+        _depthFirstSearch(tiles, adjacentTile, depth - 1);
+      }
+    }
+  }
+
+  void _movePlayer(TapUpDetails details, Size size) {
+    if (_allowPieceMovement) {
+      Tile? closestTile;
+      double closestDistance = 10.0;
+      for (Tile tile in _legalMoves) {
+        double distance = (OffsetUtil.getScaledOffset(tile.offset, size) - details.localPosition).distance;
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestTile = tile;
+        }
+      }
+
+      if (closestTile != null) {
+        setState(() {
+          _players[_activePlayerIndex].currentTile = closestTile!;
+          _legalMoves = HashSet();
+          _moves = 0;
+        });
+        _activePlayerIndex = (_activePlayerIndex + 1) % _players.length;
+        _allowPieceMovement = false;
+      }
+    }
   }
 
   @override
@@ -120,25 +174,53 @@ class _BoardScreenState extends State<BoardScreen> {
         title: const Text('Patriotic Pursuit'),
       ),
       body: Center(
-        child: LayoutBuilder(
-          builder: (BuildContext context, BoxConstraints constraints) => AspectRatio(
-            aspectRatio: 16 / 9,
-            child: Stack(
-              children: [
-                Center(
-                  child: Image.asset('assets/images/board.png')
+        child: AspectRatio(
+          aspectRatio: 16 / 9,
+          child: Stack(
+            children: [
+              Center(
+                child: Image.asset('assets/images/board.png')
+              ),
+              Align(
+                alignment: Alignment.bottomLeft,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    '$_moves',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 100
+                    ),
+                  ),
                 ),
-                CustomPaint(
-                  size: constraints.biggest,
-                  painter: BoardPainter(widget.tiles, _players),
-                )
-              ],
-            ),
+              ),
+              LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) => GestureDetector(
+                  onTapUp: (TapUpDetails tapUpDetails) => _movePlayer(tapUpDetails, constraints.biggest),
+                  child: CustomPaint(
+                    size: constraints.biggest,
+                    painter: BoardPainter(_legalMoves, _players),
+                  ),
+                ),
+              ),
+              // Container(color: Colors.pink,),
+            ],
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async => _makePlayers(await _getNumberOfPlayers() ?? 0)
+      floatingActionButton: _players.isEmpty ? FloatingActionButton(
+        onPressed: () async => _makePlayers(await _getNumberOfPlayers() ?? 0),
+        child: const Icon(Icons.play_arrow),
+      ) : FloatingActionButton(
+        onPressed: () {
+          if (_moves == 0) {
+            setState(() {
+              _moves = Random().nextInt(6) + 1;
+            });
+            _getLegalMoves();
+          }
+        },
+        child: const Icon(Icons.numbers),
       ),
     );
   }
