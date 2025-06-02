@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:patriotic_pursuit/tile.dart';
 
 class Player {
-  static const List<Color> _colors = [
+  static const List<Color> colors = [
     Colors.blue,
     Colors.orange,
     Colors.green,
     Colors.yellow,
-    Colors.pink,
+    Colors.red,
     Colors.purple
   ];
   static int _numberOfPlayers = 0;
@@ -17,7 +17,7 @@ class Player {
   int lastPieCollected = -1;
 
   Player(this.currentTile) :
-      color = _colors[_numberOfPlayers++];
+      color = colors[_numberOfPlayers++];
 
   void addPie(int index) {
     pies[index] = true;

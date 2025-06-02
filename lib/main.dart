@@ -174,6 +174,8 @@ class _BoardScreenState extends State<BoardScreen> {
         }
 
         _allowPieceMovement = false;
+
+        setState(() {});
       }
     }
   }

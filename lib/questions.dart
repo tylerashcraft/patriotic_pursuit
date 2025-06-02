@@ -55,11 +55,11 @@ class Questions {
       Question('What group was known for using violence and intimidation to oppose Reconstruction efforts?', 'ku klux klan'),
       Question('What political party emerged to represent farmers and laborers in the late 1800s?', 'populists'),
       Question('What system was introduced to make voting fairer by keeping ballots anonymous?', 'secret ballot'),
-      Question('What fee did Southern states require voters to pay to prevent Black citizens from voting?', 'poll tax'),
+      Question('What fee did Southern states require voters to pay to prevent African American citizens from voting?', 'poll tax'),
       Question('What party wanted the U.S. to use silver as currency?', 'populists'),
       Question('What organization fought for an eight-hour workday and better labor conditions?', 'knights of labor'),
       Question('What party enforced segregation laws in the South?', 'democrats'),
-      Question('What group was often excluded from voting?', 'blacks'),
+      Question('What group was often excluded from voting?', 'african american'),
       Question('What policy aimed to rebuild the South and protect rights of freed slaves after the Civil War?', 'reconstruction'),
     ],
     [
