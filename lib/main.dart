@@ -4,9 +4,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:patriotic_pursuit/board_painter.dart';
+import 'package:patriotic_pursuit/middle_tile.dart';
 import 'package:patriotic_pursuit/offset_util.dart';
 import 'package:patriotic_pursuit/player.dart';
-import 'package:patriotic_pursuit/questions.dart';
 import 'package:patriotic_pursuit/tile.dart';
 
 void main() {
@@ -33,8 +33,7 @@ class BoardScreen extends StatefulWidget {
   static const double tileSpacing = 57.0;
   static const double initialSpacing = 105.0;
 
-  final Tile middlePiece = Tile([...Questions.questions[0], ...Questions.questions[1], ...Questions.questions[2], ...Questions.questions[3],
-    ...Questions.questions[4], ...Questions.questions[5]], const Offset(7, 0));
+  final Tile middlePiece = MiddleTile(const Offset(7, 0));
   final List<Tile> tiles = List.empty(growable: true);
 
   BoardScreen({super.key}) {
@@ -48,7 +47,7 @@ class BoardScreen extends StatefulWidget {
       num radians = pi / 3 * i;
       Offset radialOffset = Offset(cos(radians), sin(radians));
       for (int j = 0; j < 5; j++) {
-        Tile tile = Tile(Questions.questions[j], radialOffset * tileSpacing * (j as double) + radialOffset * initialSpacing + middlePiece.offset);
+        Tile tile = Tile(j, radialOffset * tileSpacing * (j as double) + radialOffset * initialSpacing + middlePiece.offset);
         tile.addAdjacentTile(previousTile);
         previousTile = tile;
         tiles.add(tile);
@@ -62,7 +61,7 @@ class BoardScreen extends StatefulWidget {
       if (i % 8 != 7) {
         num radians = pi / 24 * (i + (i % 8 == 0 ? 0 : 0.5));
         Offset radialOffset = Offset(cos(radians), sin(radians));
-        Tile tile = Tile(Questions.questions[i % 6], radialOffset * tileSpacing * 5.2 + radialOffset * initialSpacing + middlePiece.offset);
+        Tile tile = Tile(i % 6, radialOffset * tileSpacing * 5.2 + radialOffset * initialSpacing + middlePiece.offset);
         if (previousTile != null) {
           tile.addAdjacentTile(previousTile);
         }
@@ -89,6 +88,7 @@ class _BoardScreenState extends State<BoardScreen> {
   int _moves = 0;
   Set<Tile> _legalMoves = HashSet();
   bool _allowPieceMovement = false;
+  String? winningPlayer;
 
   Future<int?> _getNumberOfPlayers() async {
     return showDialog<int>(
@@ -143,12 +143,13 @@ class _BoardScreenState extends State<BoardScreen> {
     }
   }
 
-  void _movePlayer(TapUpDetails details, Size size) {
+  void _movePlayer(TapUpDetails details, Size size) async {
     if (_allowPieceMovement) {
       Tile? closestTile;
       double closestDistance = 10.0;
       for (Tile tile in _legalMoves) {
-        double distance = (OffsetUtil.getScaledOffset(tile.offset, size) - details.localPosition).distance;
+        double distance = (OffsetUtil.getScaledOffset(tile.offset, size) -
+            details.localPosition).distance;
         if (distance < closestDistance) {
           closestDistance = distance;
           closestTile = tile;
@@ -156,15 +157,34 @@ class _BoardScreenState extends State<BoardScreen> {
       }
 
       if (closestTile != null) {
+        Player activePlayer = _players[_activePlayerIndex];
+
         setState(() {
-          _players[_activePlayerIndex].currentTile = closestTile!;
+          activePlayer.currentTile = closestTile!;
           _legalMoves = HashSet();
           _moves = 0;
         });
-        _activePlayerIndex = (_activePlayerIndex + 1) % _players.length;
+
+        if (await closestTile.onLandedOn(context, activePlayer)) {
+          _players.removeAt(_activePlayerIndex);
+          _showPlayerWinDialog(activePlayer.color.toString());
+          _activePlayerIndex %= (_players.length + 1);
+        } else {
+          _activePlayerIndex = (_activePlayerIndex + 1) % _players.length;
+        }
+
         _allowPieceMovement = false;
       }
     }
+  }
+
+  void _showPlayerWinDialog(String winningColor) {
+    showDialog(
+      context: context,
+      builder: (BuildContext buildContext) => AlertDialog(
+        title: Text('$winningColor has won the game!'),
+      )
+    );
   }
 
   @override

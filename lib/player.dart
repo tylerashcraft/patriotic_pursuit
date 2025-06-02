@@ -11,10 +11,16 @@ class Player {
     Colors.purple
   ];
   static int _numberOfPlayers = 0;
-  final List<bool> _pies = List.filled(6, false);
+  final List<bool> pies = List.filled(6, false);
   Tile currentTile;
   Color color;
+  int lastPieCollected = -1;
 
   Player(this.currentTile) :
       color = _colors[_numberOfPlayers++];
+
+  void addPie(int index) {
+    pies[index] = true;
+    lastPieCollected = index;
+  }
 }
