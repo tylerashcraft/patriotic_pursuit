@@ -37,6 +37,8 @@ class BoardScreen extends StatefulWidget {
   final List<Tile> tiles = List.empty(growable: true);
 
   BoardScreen({super.key}) {
+    Queue<int> categoryIndexes = Queue.of([5, 1, 2, 4, 3, 0, 2, 3, 5, 4, 1, 3, 4, 0, 5, 2, 4, 5, 1, 0, 3, 5, 0, 2, 1, 4, 0, 1, 3, 2, -1, 3, -1, 2, 5, -1, 4, -1, 4, -1, 3, 0, -1, 5, -1, 5, -1, 4, 1, -1, 0, -1, 0, -1, 5, 2, -1, 1, -1, 1, -1, 0, 3, -1, 2, -1, 2, -1, 1, 4, -1, 3]);
+
     // Make the board
     tiles.add(middlePiece);
 
@@ -47,7 +49,7 @@ class BoardScreen extends StatefulWidget {
       num radians = pi / 3 * i;
       Offset radialOffset = Offset(cos(radians), sin(radians));
       for (int j = 0; j < 5; j++) {
-        Tile tile = Tile(j, radialOffset * tileSpacing * (j as double) + radialOffset * initialSpacing + middlePiece.offset);
+        Tile tile = Tile(categoryIndexes.removeFirst(), radialOffset * tileSpacing * (j as double) + radialOffset * initialSpacing + middlePiece.offset);
         tile.addAdjacentTile(previousTile);
         previousTile = tile;
         tiles.add(tile);
@@ -61,7 +63,7 @@ class BoardScreen extends StatefulWidget {
       if (i % 8 != 7) {
         num radians = pi / 24 * (i + (i % 8 == 0 ? 0 : 0.5));
         Offset radialOffset = Offset(cos(radians), sin(radians));
-        Tile tile = Tile(i % 6, radialOffset * tileSpacing * 5.2 + radialOffset * initialSpacing + middlePiece.offset);
+        Tile tile = Tile(categoryIndexes.removeFirst(), radialOffset * tileSpacing * 5.2 + radialOffset * initialSpacing + middlePiece.offset);
         if (previousTile != null) {
           tile.addAdjacentTile(previousTile);
         }

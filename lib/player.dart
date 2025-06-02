@@ -3,12 +3,12 @@ import 'package:patriotic_pursuit/tile.dart';
 
 class Player {
   static const List<Color> colors = [
-    Colors.blue,
     Colors.orange,
-    Colors.green,
-    Colors.yellow,
+    Colors.blue,
     Colors.red,
-    Colors.purple
+    Colors.yellow,
+    Colors.purple,
+    Colors.green
   ];
   static int _numberOfPlayers = 0;
   final List<bool> pies = List.filled(6, false);
